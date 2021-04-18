@@ -1,5 +1,10 @@
+#include <stdio.h>
+#include <string.h>
 #include <jsonwriter.h>
-#include <scan.h>
+
+#ifdef INCLUDE_UTILS
+#include "utils.c"
+#endif
 
 #define JSONWRITER_MAX_NESTING 256
 struct jsonwriter_data {
@@ -198,4 +203,3 @@ int jsonwriter_start_object(jsonwriter_handle h) {
 int jsonwriter_start_array(jsonwriter_handle h) {
   return jsonwriter_go_deeper((struct jsonwriter_data *)h, '[', ']');
 }
-
