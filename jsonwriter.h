@@ -7,10 +7,16 @@
 extern "C" {
 #endif
 
+  enum jsonwriter_option {
+    jsonwriter_option_pretty = 0,
+    jsonwriter_option_compact = 1
+  };
+
   typedef void * jsonwriter_handle;
   jsonwriter_handle jsonwriter_new(size_t (*write)(const void *, size_t, size_t, void *),
                                    void *write_arg);
 
+  void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt);
   void jsonwriter_delete(jsonwriter_handle h);
 
   int jsonwriter_start_object(jsonwriter_handle h);

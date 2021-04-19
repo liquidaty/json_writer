@@ -21,7 +21,20 @@ struct jsonwriter_data {
   void *write_arg;
   char tmp[128]; // number buffer
   char just_wrote_key;
+  char compact;
 };
+
+void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt) {
+  struct jsonwriter_data *data = h;
+  switch(opt) {
+  case jsonwriter_option_pretty:
+    data->compact = 0;
+    break;
+  case jsonwriter_option_compact:
+    data->compact = 1;
+    break;
+  }
+}
 
 jsonwriter_handle jsonwriter_new(size_t (*write)(const void *, size_t, size_t, void *),
                                  void *write_arg) {
@@ -41,15 +54,12 @@ void jsonwriter_delete(jsonwriter_handle h) {
     free(data->counts);
 }
 
-/*
-static int jsonwriter_in_array(struct jsonwriter_data *data) {
-  return data->close_brackets[data->depth] == ']';
-}
-*/
-
 static int jsonwriter_indent(struct jsonwriter_data *data, char closing) {
   if(data->just_wrote_key) {
-    data->write(": ", 1, 2, data->write_arg);
+    if(data->compact)
+      data->write(":", 1, 2, data->write_arg);
+    else
+      data->write(": ", 1, 2, data->write_arg);
     data->just_wrote_key = 0;
     return 0;
   }
@@ -62,9 +72,11 @@ static int jsonwriter_indent(struct jsonwriter_data *data, char closing) {
     }
   }
 
-  data->write("\n", 1, 1, data->write_arg);
-  for(int d = data->depth; d > 0; d--)
-    data->write("  ", 1, 2, data->write_arg);
+  if(!data->compact) {
+    data->write("\n", 1, 1, data->write_arg);
+    for(int d = data->depth; d > 0; d--)
+      data->write("  ", 1, 2, data->write_arg);
+  }
   return 0;
 }
 
