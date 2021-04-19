@@ -4,6 +4,12 @@
 
 #ifdef INCLUDE_UTILS
 #include "utils.c"
+#else
+unsigned int json_esc1(const char *s, unsigned int slen,
+                       unsigned int *replacelen,
+                       char replace[], // replace buff should be at least 8 bytes long
+                       const char **new_s,
+                       size_t max_output_size);
 #endif
 
 #define JSONWRITER_MAX_NESTING 256
@@ -141,7 +147,20 @@ int jsonwriter_bool(jsonwriter_handle h, unsigned char value) {
   return 1;
 }
 
-int jsonwriter_str(jsonwriter_handle h, const char *s, size_t len) {
+int jsonwriter_str(jsonwriter_handle h, const char *s) {
+  struct jsonwriter_data *data = h;
+  if(data->depth < JSONWRITER_MAX_NESTING) {
+    jsonwriter_indent(data, 0);
+    if(s)
+      jsonwriter_str1(h, s, strlen(s));
+    else
+      data->write("null", 1, 4, data->write_arg);
+    return 0;
+  }
+  return 1;
+}
+
+int jsonwriter_strn(jsonwriter_handle h, const char *s, size_t len) {
   struct jsonwriter_data *data = h;
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
