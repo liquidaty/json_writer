@@ -52,6 +52,7 @@ void jsonwriter_delete(jsonwriter_handle h) {
     free(data->close_brackets);
   if(data->counts)
     free(data->counts);
+  free(h);
 }
 
 static int jsonwriter_indent(struct jsonwriter_data *data, char closing) {
