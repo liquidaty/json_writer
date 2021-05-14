@@ -22,6 +22,7 @@ struct jsonwriter_data {
   char tmp[128]; // number buffer
   char just_wrote_key;
   char compact;
+  char started;
 };
 
 void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt) {
@@ -35,6 +36,15 @@ void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt) {
     break;
   }
 }
+
+static size_t fwrite2(const void *p, size_t n, size_t size, void *f) {
+  return (size_t) fwrite(p, n, size, f);
+}
+
+jsonwriter_handle jsonwriter_new_file(FILE *f) {
+  return jsonwriter_new(fwrite2, f);
+}
+
 
 jsonwriter_handle jsonwriter_new(size_t (*write)(const void *, size_t, size_t, void *),
                                  void *write_arg) {
@@ -53,6 +63,12 @@ void jsonwriter_delete(jsonwriter_handle h) {
   if(data->counts)
     free(data->counts);
   free(h);
+}
+
+static size_t jsonwriter_writeln(struct jsonwriter_data *data) {
+  if(data->started)
+    return data->write("\n", 1, 1, data->write_arg);
+  return 0;
 }
 
 static int jsonwriter_indent(struct jsonwriter_data *data, char closing) {
@@ -74,7 +90,7 @@ static int jsonwriter_indent(struct jsonwriter_data *data, char closing) {
   }
 
   if(!data->compact) {
-    data->write("\n", 1, 1, data->write_arg);
+    jsonwriter_writeln(data);
     for(int d = data->depth; d > 0; d--)
       data->write("  ", 1, 2, data->write_arg);
   }
@@ -89,6 +105,8 @@ int jsonwriter_end(jsonwriter_handle h) { // return 0 on success
       jsonwriter_indent(data, 1);
       data->write(data->close_brackets + data->depth, 1, 1, data->write_arg);
     }
+    if(data->depth == 0)
+      jsonwriter_writeln(data);
     return 0;
   }
   return 1; // error: nothing to close
@@ -194,15 +212,30 @@ int jsonwriter_object_key(jsonwriter_handle h, const char *key, size_t len_or_ze
   return 1;
 }
 
-int jsonwriter_dbl(jsonwriter_handle h, long double d) {
+int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char compact) {
   struct jsonwriter_data *data = h;
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
-    int len = snprintf(data->tmp, sizeof(data->tmp), "%Lf", d);
+    format_string = format_string ? format_string : "%Lf";
+    int len = snprintf(data->tmp, sizeof(data->tmp), format_string, d);
+    if(len && compact && memchr(data->tmp, '.', len)) {
+      while(len && data->tmp[len-1] == '0')
+        len--;
+      if(len && data->tmp[len-1] == '.')
+        len--;
+      if(!len) {
+        *data->tmp = '0';
+        len = 1;
+      }
+    }
     data->write(data->tmp, 1, len, data->write_arg);
     return 0;
   }
   return 1;
+}
+
+int jsonwriter_dbl(jsonwriter_handle h, long double d) {
+  return jsonwriter_dblf(h, d, NULL, 1);
 }
 
 int jsonwriter_int(jsonwriter_handle h, long int i) {
@@ -219,6 +252,7 @@ int jsonwriter_int(jsonwriter_handle h, long int i) {
 static int jsonwriter_go_deeper(struct jsonwriter_data *data, char open, char close) {
   if(data->depth < JSONWRITER_MAX_NESTING - 1) {
     jsonwriter_indent(data, 0);
+    data->started = 1;
     data->write(&open, 1, 1, data->write_arg);
     data->close_brackets[data->depth] = close;
     data->depth++;

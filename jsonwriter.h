@@ -13,6 +13,7 @@ extern "C" {
   };
 
   typedef void * jsonwriter_handle;
+  jsonwriter_handle jsonwriter_new_file(FILE *f);
   jsonwriter_handle jsonwriter_new(size_t (*write)(const void *, size_t, size_t, void *),
                                    void *write_arg);
 
@@ -32,6 +33,7 @@ extern "C" {
   int jsonwriter_strn(jsonwriter_handle h, const char *s, size_t len);
   int jsonwriter_bool(jsonwriter_handle h, unsigned char value);
   int jsonwriter_dbl(jsonwriter_handle h, long double d);
+  int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char compact);
   int jsonwriter_int(jsonwriter_handle h, long int i);
   int jsonwriter_null(jsonwriter_handle h);
 
