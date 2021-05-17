@@ -20,9 +20,15 @@ struct jsonwriter_data {
   size_t (*write)(const void *, size_t, size_t, void *);
   void *write_arg;
   char tmp[128]; // number buffer
-  char just_wrote_key;
-  char compact;
-  char started;
+
+  struct jsonwriter_variant (*to_jsw_variant)(void *);
+  void (*after_to_jsw_variant)(void *, struct jsonwriter_variant *);
+
+  unsigned char just_wrote_key:1;
+  unsigned char compact:1;
+  unsigned char started:1;
+  unsigned char dummy:5;
+
 };
 
 void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt) {
@@ -74,7 +80,7 @@ static size_t jsonwriter_writeln(struct jsonwriter_data *data) {
 static int jsonwriter_indent(struct jsonwriter_data *data, char closing) {
   if(data->just_wrote_key) {
     if(data->compact)
-      data->write(":", 1, 2, data->write_arg);
+      data->write(":", 1, 1, data->write_arg);
     else
       data->write(": ", 1, 2, data->write_arg);
     data->just_wrote_key = 0;
@@ -205,7 +211,7 @@ int jsonwriter_object_key(jsonwriter_handle h, const char *key, size_t len_or_ze
   struct jsonwriter_data *data = h;
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
-    jsonwriter_str1(h, key, len_or_zero == 0 ? strlen(key) : len_or_zero == 0);
+    jsonwriter_str1(h, key, len_or_zero == 0 ? strlen(key) : len_or_zero);
     data->just_wrote_key = 1;
     return 0;
   }
@@ -268,4 +274,46 @@ int jsonwriter_start_object(jsonwriter_handle h) {
 
 int jsonwriter_start_array(jsonwriter_handle h) {
   return jsonwriter_go_deeper((struct jsonwriter_data *)h, '[', ']');
+}
+
+enum jsonwriter_error jsonwriter_set_variant_handler(
+    jsonwriter_handle h,
+    struct jsonwriter_variant (*to_jsw_variant)(void *),
+    void (*cleanup)(void *, struct jsonwriter_variant *)
+) {
+  struct jsonwriter_data *d = h;
+  d->after_to_jsw_variant = cleanup;
+  if(!(d->to_jsw_variant = to_jsw_variant))
+    return jsonwriter_error_invalid_value;
+
+  return jsonwriter_error_ok;
+}
+
+enum jsonwriter_error jsonwriter_variant(jsonwriter_handle h, void *data) {
+  struct jsonwriter_data *d = h;
+  if(!d->to_jsw_variant)
+    return jsonwriter_error_misconfiguration;
+  struct jsonwriter_variant jv = d->to_jsw_variant(data);
+
+  int rc = jsonwriter_error_unrecognized_variant_type;
+  switch(jv.type) {
+  case jsonwriter_datatype_null:
+    rc = jsonwriter_null(h);
+    break;
+  case jsonwriter_datatype_string:
+    rc = jsonwriter_str(h, jv.value.str);
+    break;
+  case jsonwriter_datatype_integer:
+    rc = jsonwriter_int(h, jv.value.i);
+    break;
+  case jsonwriter_datatype_float:
+    rc = jsonwriter_dbl(h, jv.value.dbl);
+    break;
+  case jsonwriter_datatype_bool:
+    rc = jsonwriter_bool(h, jv.value.i ? 1 : 0);
+    break;
+  }
+  if(d->after_to_jsw_variant)
+    d->after_to_jsw_variant(data, &jv);
+  return rc;
 }
