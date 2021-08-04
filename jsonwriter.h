@@ -12,12 +12,13 @@ extern "C" {
     jsonwriter_option_compact = 1
   };
 
-  enum jsonwriter_error {
-    jsonwriter_error_ok = 0, // no error
-    jsonwriter_error_out_of_memory = 1,
-    jsonwriter_error_invalid_value,
-    jsonwriter_error_misconfiguration,
-    jsonwriter_error_unrecognized_variant_type
+  enum jsonwriter_status {
+    jsonwriter_status_ok = 0, // no error
+    jsonwriter_status_out_of_memory = 1,
+    jsonwriter_status_invalid_value,
+    jsonwriter_status_misconfiguration,
+    jsonwriter_status_unrecognized_variant_type,
+    jsonwriter_status_invalid_end
   };
 
   typedef void * jsonwriter_handle;
@@ -31,11 +32,15 @@ extern "C" {
   int jsonwriter_start_object(jsonwriter_handle h);
   int jsonwriter_start_array(jsonwriter_handle h);
 
-  int jsonwriter_end(jsonwriter_handle h);
+  enum jsonwriter_status jsonwriter_end_array(jsonwriter_handle h);  // end an error, or return err
+  enum jsonwriter_status jsonwriter_end_object(jsonwriter_handle h); // end an object, or return err
+  enum jsonwriter_status jsonwriter_end(jsonwriter_handle h); // end either an array or an object, or return err
+
+  // to do: jsonwriter_end_array() and jsonwriter_end_object(): same as jsonwriter_end, but
+  // return an error if no matching open array/obj
   int jsonwriter_end_all(jsonwriter_handle h);
 
-  // jsonwriter_object_key: if len is zero, will use strlen to calculate
-  int jsonwriter_object_key(jsonwriter_handle h, const char *key, size_t len_or_zero);
+  int jsonwriter_object_key(jsonwriter_handle h, const char *key);
 
   int jsonwriter_str(jsonwriter_handle h, const char *s);
   int jsonwriter_strn(jsonwriter_handle h, const char *s, size_t len);
@@ -44,7 +49,6 @@ extern "C" {
   int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char compact);
   int jsonwriter_int(jsonwriter_handle h, long int i);
   int jsonwriter_null(jsonwriter_handle h);
-
 
   // optionally, you can configure jsonwriter to handle custom variant types
   enum jsonwriter_datatype {
@@ -74,13 +78,13 @@ extern "C" {
   // jsonwriter_set_variant_handler(): provide jsonwriter with a custom function that converts your data to a jsonwriter_variant
   // with an optional cleanup callback
   // returns 0 on success, nonzero on error
-  enum jsonwriter_error
+  enum jsonwriter_status
   jsonwriter_set_variant_handler(jsonwriter_handle h,
                                  struct jsonwriter_variant (*to_jsw_variant)(void *),
                                  void (*cleanup)(void *, struct jsonwriter_variant *));
 
   // write a variant. will use custom to_jsw_variant() to convert data to jsonwriter_variant
-  enum jsonwriter_error jsonwriter_variant(jsonwriter_handle h, void *data);
+  enum jsonwriter_status jsonwriter_variant(jsonwriter_handle h, void *data);
 
 #ifdef __cplusplus
 }

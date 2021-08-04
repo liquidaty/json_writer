@@ -28,7 +28,6 @@ struct jsonwriter_data {
   unsigned char compact:1;
   unsigned char started:1;
   unsigned char dummy:5;
-
 };
 
 void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt) {
@@ -103,19 +102,35 @@ static int jsonwriter_indent(struct jsonwriter_data *data, char closing) {
   return 0;
 }
 
-int jsonwriter_end(jsonwriter_handle h) { // return 0 on success
+static enum jsonwriter_status jsonwriter_end_aux(jsonwriter_handle h, char close_bracket) { // return 0 on success
   struct jsonwriter_data *data = h;
   if(data->depth > 0) {
+    if(close_bracket && data->close_brackets[data->depth-1] != close_bracket)
+      return jsonwriter_status_invalid_end;
+
     data->depth--;
+
     if(data->depth < JSONWRITER_MAX_NESTING - 1) {
       jsonwriter_indent(data, 1);
       data->write(data->close_brackets + data->depth, 1, 1, data->write_arg);
     }
     if(data->depth == 0)
       jsonwriter_writeln(data);
-    return 0;
+    return jsonwriter_status_ok;
   }
-  return 1; // error: nothing to close
+  return jsonwriter_status_invalid_end; // error: nothing to close
+}
+
+enum jsonwriter_status jsonwriter_end(jsonwriter_handle h) {
+  return jsonwriter_end_aux(h, 0);
+}
+
+enum jsonwriter_status jsonwriter_end_array(jsonwriter_handle h) {
+  return jsonwriter_end_aux(h, ']');
+}
+
+enum jsonwriter_status jsonwriter_end_object(jsonwriter_handle h) {
+  return jsonwriter_end_aux(h, '}');
 }
 
 int jsonwriter_end_all(jsonwriter_handle h) {
@@ -207,7 +222,7 @@ int jsonwriter_strn(jsonwriter_handle h, const char *s, size_t len) {
   return 1;
 }
 
-int jsonwriter_object_key(jsonwriter_handle h, const char *key, size_t len_or_zero) {
+static int jsonwriter_object_keyn(jsonwriter_handle h, const char *key, size_t len_or_zero) {
   struct jsonwriter_data *data = h;
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
@@ -216,6 +231,10 @@ int jsonwriter_object_key(jsonwriter_handle h, const char *key, size_t len_or_ze
     return 0;
   }
   return 1;
+}
+
+int jsonwriter_object_key(jsonwriter_handle h, const char *key) {
+  return jsonwriter_object_keyn(h, key, strlen(key));
 }
 
 int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char compact) {
@@ -276,7 +295,7 @@ int jsonwriter_start_array(jsonwriter_handle h) {
   return jsonwriter_go_deeper((struct jsonwriter_data *)h, '[', ']');
 }
 
-enum jsonwriter_error jsonwriter_set_variant_handler(
+enum jsonwriter_status jsonwriter_set_variant_handler(
     jsonwriter_handle h,
     struct jsonwriter_variant (*to_jsw_variant)(void *),
     void (*cleanup)(void *, struct jsonwriter_variant *)
@@ -284,18 +303,18 @@ enum jsonwriter_error jsonwriter_set_variant_handler(
   struct jsonwriter_data *d = h;
   d->after_to_jsw_variant = cleanup;
   if(!(d->to_jsw_variant = to_jsw_variant))
-    return jsonwriter_error_invalid_value;
+    return jsonwriter_status_invalid_value;
 
-  return jsonwriter_error_ok;
+  return jsonwriter_status_ok;
 }
 
-enum jsonwriter_error jsonwriter_variant(jsonwriter_handle h, void *data) {
+enum jsonwriter_status jsonwriter_variant(jsonwriter_handle h, void *data) {
   struct jsonwriter_data *d = h;
   if(!d->to_jsw_variant)
-    return jsonwriter_error_misconfiguration;
+    return jsonwriter_status_misconfiguration;
   struct jsonwriter_variant jv = d->to_jsw_variant(data);
 
-  int rc = jsonwriter_error_unrecognized_variant_type;
+  int rc = jsonwriter_status_unrecognized_variant_type;
   switch(jv.type) {
   case jsonwriter_datatype_null:
     rc = jsonwriter_null(h);
