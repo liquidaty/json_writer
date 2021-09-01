@@ -237,13 +237,14 @@ int jsonwriter_object_key(jsonwriter_handle h, const char *key) {
   return jsonwriter_object_keyn(h, key, strlen(key));
 }
 
-int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char compact) {
+int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string,
+                    char trim_trailing_zeros_after_dec) {
   struct jsonwriter_data *data = h;
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
     format_string = format_string ? format_string : "%Lf";
     int len = snprintf(data->tmp, sizeof(data->tmp), format_string, d);
-    if(len && compact && memchr(data->tmp, '.', len)) {
+    if(len && trim_trailing_zeros_after_dec && memchr(data->tmp, '.', len)) {
       while(len && data->tmp[len-1] == '0')
         len--;
       if(len && data->tmp[len-1] == '.')
@@ -263,11 +264,11 @@ int jsonwriter_dbl(jsonwriter_handle h, long double d) {
   return jsonwriter_dblf(h, d, NULL, 1);
 }
 
-int jsonwriter_int(jsonwriter_handle h, long int i) {
+int jsonwriter_int(jsonwriter_handle h, jsw_int64 i) {
   struct jsonwriter_data *data = h;
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
-    int len = snprintf(data->tmp, sizeof(data->tmp), "%li", i);
+    int len = snprintf(data->tmp, sizeof(data->tmp), JSW_INT64_PRINTF_FMT, i);
     data->write(data->tmp, 1, len, data->write_arg);
     return 0;
   }

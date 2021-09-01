@@ -7,6 +7,18 @@
 extern "C" {
 #endif
 
+# ifdef _WIN32
+#  define jsw_int64 __int64
+#  define JSW_INT64_MIN _I64_MIN
+#  define JSW_INT64_MAX _I64_MAX
+#  define JSW_INT64_PRINTF_FMT "%lli"
+# else // not WIN
+#  define jsw_int64 int64_t
+#  define JSW_INT64_MIN INT64_MIN
+#  define JSW_INT64_MAX INT64_MAX
+#  define JSW_INT64_PRINTF_FMT "%lli"
+# endif
+
   enum jsonwriter_option {
     jsonwriter_option_pretty = 0,
     jsonwriter_option_compact = 1
@@ -46,8 +58,9 @@ extern "C" {
   int jsonwriter_strn(jsonwriter_handle h, const char *s, size_t len);
   int jsonwriter_bool(jsonwriter_handle h, unsigned char value);
   int jsonwriter_dbl(jsonwriter_handle h, long double d);
-  int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char compact);
-  int jsonwriter_int(jsonwriter_handle h, long int i);
+  int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char trim_trailing_zeros_after_dec);
+
+  int jsonwriter_int(jsonwriter_handle h, jsw_int64 i);
   int jsonwriter_null(jsonwriter_handle h);
 
   // optionally, you can configure jsonwriter to handle custom variant types
