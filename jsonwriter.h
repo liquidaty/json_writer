@@ -33,7 +33,10 @@ extern "C" {
     jsonwriter_status_invalid_end
   };
 
-  typedef void * jsonwriter_handle;
+  struct jsonwriter_data;
+
+  typedef struct jsonwriter_data * jsonwriter_handle;
+
   jsonwriter_handle jsonwriter_new_file(FILE *f);
   jsonwriter_handle jsonwriter_new(size_t (*write)(const void *, size_t, size_t, void *),
                                    void *write_arg);
