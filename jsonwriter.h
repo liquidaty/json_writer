@@ -2,6 +2,8 @@
 #define JSONWRITER_H
 
 #include <stdlib.h>
+#include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
