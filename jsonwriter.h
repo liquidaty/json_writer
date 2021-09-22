@@ -4,6 +4,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <inttypes.h>
+
+#define JSW_STRLEN(x) strlen((const char *)x)
 
 #ifdef __cplusplus
 extern "C" {
@@ -13,12 +16,12 @@ extern "C" {
 #  define jsw_int64 __int64
 #  define JSW_INT64_MIN _I64_MIN
 #  define JSW_INT64_MAX _I64_MAX
-#  define JSW_INT64_PRINTF_FMT "%lli"
+#  define JSW_INT64_PRINTF_FMT "%"PRId64
 # else // not WIN
 #  define jsw_int64 int64_t
 #  define JSW_INT64_MIN INT64_MIN
 #  define JSW_INT64_MAX INT64_MAX
-#  define JSW_INT64_PRINTF_FMT "%lli"
+#  define JSW_INT64_PRINTF_FMT "%"PRId64
 # endif
 
   enum jsonwriter_option {
@@ -58,12 +61,20 @@ extern "C" {
   int jsonwriter_end_all(jsonwriter_handle h);
 
   int jsonwriter_object_key(jsonwriter_handle h, const char *key);
+  #define jsonwriter_object_str(h, key, v) jsonwriter_object_key(h, key), jsonwriter_str(h, v)
+  #define jsonwriter_object_bool(h, key, v) jsonwriter_object_key(h, key), jsonwriter_bool(h, v)
+  #define jsonwriter_object_dbl(h, key, v)  jsonwriter_object_key(h, key), jsonwriter_dbl(h, v)
+  #define jsonwriter_object_dblf(h, key, v, fmt, t) jsonwriter_object_key(h, key), jsonwriter_dblf(h, v, f, t)
+  #define jsonwriter_object_int(h, key,	v)  jsonwriter_object_key(h, key), jsonwriter_int(h, v)
+  #define jsonwriter_object_null(h, key) jsonwriter_object_key(h, key), jsonwriter_null(h)
+  #define jsonwriter_object_array(h, key) jsonwriter_object_key(h, key), jsonwriter_start_array(h)
+  #define jsonwriter_object_object(h, key) jsonwriter_object_key(h, key), jsonwriter_start_object(h)
 
-  int jsonwriter_str(jsonwriter_handle h, const char *s);
-  int jsonwriter_strn(jsonwriter_handle h, const char *s, size_t len);
+  int jsonwriter_str(jsonwriter_handle h, const unsigned char *s);
+  int jsonwriter_strn(jsonwriter_handle h, const unsigned char *s, size_t len);
   int jsonwriter_bool(jsonwriter_handle h, unsigned char value);
   int jsonwriter_dbl(jsonwriter_handle h, long double d);
-  int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, char trim_trailing_zeros_after_dec);
+  int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, unsigned char trim_trailing_zeros_after_dec);
 
   int jsonwriter_int(jsonwriter_handle h, jsw_int64 i);
   int jsonwriter_null(jsonwriter_handle h);
@@ -86,7 +97,7 @@ extern "C" {
       unsigned char b; // bool
       long int i;      // integer
       long double dbl; // double
-      char *str;       // string
+      unsigned char *str;       // string
       // possible to do:
       //   void *array; // will require corresponding function pointers to get array size and elements
       //   void *object; // will require corresponding function pointers to get object keys and elements
