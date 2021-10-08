@@ -238,6 +238,14 @@ int jsonwriter_bool(jsonwriter_handle data, unsigned char value) {
   return 1;
 }
 
+int jsonwriter_cstr(jsonwriter_handle data, const char *s) {
+  return jsonwriter_str(data, (const unsigned char *)s);
+}
+
+int jsonwriter_cstrn(jsonwriter_handle data, const char *s, size_t len) {
+  return jsonwriter_strn(data, (const unsigned char *)s, len);
+}
+
 int jsonwriter_str(jsonwriter_handle data, const unsigned char *s) {
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);

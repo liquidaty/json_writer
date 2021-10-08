@@ -62,6 +62,9 @@ extern "C" {
 
   int jsonwriter_object_key(jsonwriter_handle h, const char *key);
   #define jsonwriter_object_str(h, key, v) jsonwriter_object_key(h, key), jsonwriter_str(h, v)
+  #define jsonwriter_object_strn(h, key, v, len) jsonwriter_object_key(h, key), jsonwriter_strn(h, v, len)
+  #define jsonwriter_object_cstr(h, key, v) jsonwriter_object_key(h, key), jsonwriter_cstr(h, v)
+  #define jsonwriter_object_cstrn(h, key, v, len) jsonwriter_object_key(h, key), jsonwriter_cstrn(h, v, len)
   #define jsonwriter_object_bool(h, key, v) jsonwriter_object_key(h, key), jsonwriter_bool(h, v)
   #define jsonwriter_object_dbl(h, key, v)  jsonwriter_object_key(h, key), jsonwriter_dbl(h, v)
   #define jsonwriter_object_dblf(h, key, v, fmt, t) jsonwriter_object_key(h, key), jsonwriter_dblf(h, v, f, t)
@@ -72,6 +75,8 @@ extern "C" {
 
   int jsonwriter_str(jsonwriter_handle h, const unsigned char *s);
   int jsonwriter_strn(jsonwriter_handle h, const unsigned char *s, size_t len);
+  int jsonwriter_cstr(jsonwriter_handle data, const char *s);
+  int jsonwriter_cstrn(jsonwriter_handle data, const char *s, size_t len);
   int jsonwriter_bool(jsonwriter_handle h, unsigned char value);
   int jsonwriter_dbl(jsonwriter_handle h, long double d);
   int jsonwriter_dblf(jsonwriter_handle h, long double d, const char *format_string, unsigned char trim_trailing_zeros_after_dec);
