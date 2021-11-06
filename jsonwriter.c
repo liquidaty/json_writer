@@ -17,7 +17,7 @@ struct jsonwriter_output_buff {
   unsigned char *buff;
   size_t used;
 
-  size_t (*write)(const void *, size_t, size_t, void *);
+  size_t (*write)(const void * restrict, size_t, size_t, void * restrict);
   void *write_arg;
 };
 
@@ -40,7 +40,8 @@ struct jsonwriter_data {
 };
 
 static inline void jsonwriter_output_buff_flush(struct jsonwriter_output_buff *b) {
-  b->write(b->buff, b->used, 1, b->write_arg);
+  if(b->used)
+    b->write(b->buff, b->used, 1, b->write_arg);
   b->used = 0;
 }
 
@@ -77,7 +78,7 @@ void jsonwriter_set_option(jsonwriter_handle data, enum jsonwriter_option opt) {
   }
 }
 
-static size_t fwrite2(const void *p, size_t n, size_t size, void *f) {
+static size_t fwrite2(const void * restrict p, size_t n, size_t size, void * restrict f) {
   return (size_t) fwrite(p, n, size, f);
 }
 
@@ -86,7 +87,7 @@ jsonwriter_handle jsonwriter_new_file(FILE *f) {
 }
 
 
-jsonwriter_handle jsonwriter_new(size_t (*write)(const void *, size_t, size_t, void *),
+jsonwriter_handle jsonwriter_new(size_t (*write)(const void * restrict, size_t, size_t, void * restrict),
                                  void *write_arg) {
   struct jsonwriter_data *data = calloc(1, sizeof(*data));
   if(data) {
@@ -95,7 +96,11 @@ jsonwriter_handle jsonwriter_new(size_t (*write)(const void *, size_t, size_t, v
     if(!(data->out.buff = malloc(JSONWRITER_OUTPUT_BUFF_SIZE))
        || !(data->close_brackets = malloc(JSONWRITER_MAX_NESTING * sizeof(*data->close_brackets)))
        || !(data->counts = calloc(JSONWRITER_MAX_NESTING, sizeof(*data->counts)))) {
-      jsonwriter_delete(data);
+      // avoid jsonwriter_delete() delete here to suppress compiler warning
+      free(data->counts);
+      free(data->close_brackets);
+      free(data->out.buff);
+      free(data);
       data = NULL;
     }
   }
@@ -196,7 +201,7 @@ static int write_json_str(struct jsonwriter_output_buff *b,
 
   while(s < end) {
     replacelen = 0;
-    unsigned int no_esc = json_esc1((const unsigned char *)(s + offset), len - offset, &replacelen, replace, (const unsigned char **)&new_s, len);
+    unsigned int no_esc = json_esc1((const unsigned char *)(s + offset), len - offset, &replacelen, replace, &new_s, len);
     if(no_esc)
       jsonwriter_output_buff_write(b, s, no_esc), written += no_esc;
     if(replacelen)

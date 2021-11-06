@@ -1,4 +1,4 @@
-void str2hex(char *to, const unsigned char *p, size_t len) {
+void str2hex(unsigned char *to, const unsigned char *p, size_t len) {
   static const char *hex = "0123456789abcdef";
 
   for (; len--; p++) {
@@ -22,14 +22,14 @@ static char UTF8_charLenC(int firstChar) { /* return 0 on eof, -1 on error, > 0 
 
 #define JSON_ESC_CHAR(c) (c == '"' || c == '\\' || c < 32)
 
-static unsigned int json_esc1(const char *s, unsigned int slen,
+static unsigned int json_esc1(const unsigned char *s, unsigned int slen,
                               unsigned int *replacelen,
-                              char replace[], // replace buff should be at least 8 bytes long
-                              const char **new_s,
+                              unsigned char replace[], // replace buff should be at least 8 bytes long
+                              const unsigned char **new_s,
                               size_t max_output_size) {
   unsigned char c;
   char c_len;
-  const char *orig_s = s;
+  const unsigned char *orig_s = s;
 
   if(!max_output_size) {
     *new_s = s + slen;
@@ -37,7 +37,7 @@ static unsigned int json_esc1(const char *s, unsigned int slen,
     return 0;
   }
 
-  while(slen && (c = (unsigned char)*s) && (size_t)(s - orig_s) < max_output_size) {
+  while(slen && (c = *s) && (size_t)(s - orig_s) < max_output_size) {
     c_len = UTF8_charLenC(*s);
 
     if(c_len > 0 && ((unsigned char)c_len > slen || (size_t)((s - orig_s) + c_len) > max_output_size))
