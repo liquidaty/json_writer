@@ -42,9 +42,9 @@ extern "C" {
 
   typedef struct jsonwriter_data * jsonwriter_handle;
 
-  jsonwriter_handle jsonwriter_new_file(FILE *f);
-  jsonwriter_handle jsonwriter_new(size_t (*write)(const void *restrict, size_t, size_t, void *restrict),
-                                   void *write_arg);
+  jsonwriter_handle jsonwriter_new(FILE *f);
+  jsonwriter_handle jsonwriter_new_stream(size_t (*write)(const void *restrict, size_t, size_t, void *restrict),
+                                          void *write_arg);
 
   void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt);
   void jsonwriter_delete(jsonwriter_handle h);

@@ -82,13 +82,13 @@ static size_t fwrite2(const void * restrict p, size_t n, size_t size, void * res
   return (size_t) fwrite(p, n, size, f);
 }
 
-jsonwriter_handle jsonwriter_new_file(FILE *f) {
-  return jsonwriter_new(fwrite2, f);
+jsonwriter_handle jsonwriter_new(FILE *f) {
+  return jsonwriter_new_stream(fwrite2, f);
 }
 
 
-jsonwriter_handle jsonwriter_new(size_t (*write)(const void * restrict, size_t, size_t, void * restrict),
-                                 void *write_arg) {
+jsonwriter_handle jsonwriter_new_stream(size_t (*write)(const void * restrict, size_t, size_t, void * restrict),
+                                        void *write_arg) {
   struct jsonwriter_data *data = calloc(1, sizeof(*data));
   if(data) {
     data->out.write = write;
