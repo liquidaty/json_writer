@@ -107,9 +107,13 @@ jsonwriter_handle jsonwriter_new_stream(size_t (*write)(const void * restrict, s
   return data;
 }
 
-void jsonwriter_delete(jsonwriter_handle data) {
+void jsonwriter_flush(jsonwriter_handle data) {
   if(data->out.used)
     jsonwriter_output_buff_flush(&data->out);
+}
+
+void jsonwriter_delete(jsonwriter_handle data) {
+  jsonwriter_flush(data);
   if(data->out.buff)
     free(data->out.buff);
   if(data->close_brackets)
