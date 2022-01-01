@@ -194,7 +194,6 @@ int jsonwriter_end_all(jsonwriter_handle data) {
 static int write_json_str(struct jsonwriter_output_buff *b,
                           const unsigned char *s, size_t len,
                           unsigned char no_quotes) {
-  unsigned int offset = 0;
   unsigned int replacelen;
   unsigned char replace[10];
   const unsigned char *end = s + len;
@@ -205,14 +204,15 @@ static int write_json_str(struct jsonwriter_output_buff *b,
 
   while(s < end) {
     replacelen = 0;
-    unsigned int no_esc = json_esc1((const unsigned char *)(s + offset), len - offset, &replacelen, replace, &new_s, len);
+    unsigned int no_esc = json_esc1((const unsigned char *)s, len, &replacelen, replace, &new_s, len);
     if(no_esc)
       jsonwriter_output_buff_write(b, s, no_esc), written += no_esc;
     if(replacelen)
       jsonwriter_output_buff_write(b, replace, replacelen), written += replacelen;
-    if(new_s > s)
+    if(new_s > s) {
       s = new_s;
-    else
+      len = end - new_s;
+    } else
       break;
   }
   if(!no_quotes)
