@@ -204,7 +204,10 @@ static int write_json_str(struct jsonwriter_output_buff *b,
 
   while(s < end) {
     replacelen = 0;
-    unsigned int no_esc = json_esc1((const unsigned char *)s, len, &replacelen, replace, &new_s, len);
+    unsigned int no_esc = json_esc1((const unsigned char *)s, len,
+                                    &replacelen, replace, &new_s,
+                                    len + sizeof(replace)
+                                    );
     if(no_esc)
       jsonwriter_output_buff_write(b, s, no_esc), written += no_esc;
     if(replacelen)

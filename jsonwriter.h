@@ -47,7 +47,7 @@ extern "C" {
                                           void *write_arg);
 
   void jsonwriter_set_option(jsonwriter_handle h, enum jsonwriter_option opt);
-  void jsonwriter_flush(jsonwriter_handle data);
+  void jsonwriter_flush(jsonwriter_handle h);
   void jsonwriter_delete(jsonwriter_handle h);
 
   int jsonwriter_start_object(jsonwriter_handle h);
