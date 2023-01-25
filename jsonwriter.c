@@ -40,9 +40,11 @@ struct jsonwriter_data {
 };
 
 static inline void jsonwriter_output_buff_flush(struct jsonwriter_output_buff *b) {
-  if(b->used)
-    b->write(b->buff, b->used, 1, b->write_arg);
-  b->used = 0;
+  if(b) {
+    if(b->used)
+      b->write(b->buff, b->used, 1, b->write_arg);
+    b->used = 0;
+  }
 }
 
 #ifndef JSONWRITER_NO_BUFF
@@ -113,6 +115,8 @@ void jsonwriter_flush(jsonwriter_handle data) {
 }
 
 void jsonwriter_delete(jsonwriter_handle data) {
+  if(!data) return;
+
   jsonwriter_flush(data);
   if(data->out.buff)
     free(data->out.buff);
@@ -153,6 +157,11 @@ static int jsonwriter_indent(struct jsonwriter_data *data, unsigned char closing
       jsonwriter_output_buff_write(&data->out, (const unsigned char *)"  ", 2);
   }
   return 0;
+}
+
+size_t jsonwriter_write_raw(jsonwriter_handle jsw, const unsigned char *s, size_t len) {
+  jsonwriter_indent(jsw, 0);
+  return jsonwriter_output_buff_write(&jsw->out, s, len);
 }
 
 static enum jsonwriter_status jsonwriter_end_aux(jsonwriter_handle data, unsigned char close_bracket) { // return 0 on success
@@ -299,6 +308,7 @@ int jsonwriter_dblf(jsonwriter_handle data, long double d, const char *format_st
     jsonwriter_indent(data, 0);
     format_string = format_string ? format_string : "%Lf";
     int len = snprintf(data->tmp, sizeof(data->tmp), format_string, d);
+    // TO DO: check if len < 0 or len > sizeof(data->tmp)
     if(len && trim_trailing_zeros_after_dec && memchr(data->tmp, '.', len)) {
       while(len && data->tmp[len-1] == '0')
         len--;
@@ -319,10 +329,22 @@ int jsonwriter_dbl(jsonwriter_handle data, long double d) {
   return jsonwriter_dblf(data, d, NULL, 1);
 }
 
+int jsonwriter_size_t(jsonwriter_handle data, size_t sz) {
+  if(data->depth < JSONWRITER_MAX_NESTING) {
+    jsonwriter_indent(data, 0);
+    int len = snprintf(data->tmp, sizeof(data->tmp), "%zu", sz);
+    // TO DO: check if len < 0 or len > sizeof(data->tmp)
+    jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
+    return 0;
+  }
+  return 1;
+}
+
 int jsonwriter_int(jsonwriter_handle data, jsw_int64 i) {
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
     int len = snprintf(data->tmp, sizeof(data->tmp), JSW_INT64_PRINTF_FMT, i);
+    // TO DO: check if len < 0 or len > sizeof(data->tmp)
     jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
     return 0;
   }
