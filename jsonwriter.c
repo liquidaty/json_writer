@@ -52,8 +52,10 @@ static inline size_t jsonwriter_output_buff_write(struct jsonwriter_output_buff 
   if(n) {
     if(n + b->used > JSONWRITER_OUTPUT_BUFF_SIZE) {
       jsonwriter_output_buff_flush(b);
-      if(n > JSONWRITER_OUTPUT_BUFF_SIZE) // n too big, so write directly
+      if(n > JSONWRITER_OUTPUT_BUFF_SIZE) { // n too big, so write directly
         b->write(s, n, 1, b->write_arg);
+        return n;
+      }
     }
     // n + used < buff size
     memcpy(b->buff + b->used, s, n);
