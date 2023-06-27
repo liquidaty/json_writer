@@ -28,7 +28,7 @@ Write either to a file, or provide your own `fwrite`-like function and target:
 jsonwriter_handle jsonwriter_new_file(FILE *f);
 jsonwriter_handle jsonwriter_new(
     size_t (*write)(const void *, size_t, size_t, void *),
-		void *write_arg
+    void *write_arg
 );
 ```
 
@@ -40,7 +40,15 @@ For example:
 jsonwriter_start_object(h);
 jsonwriter_object_key(h, "hello");
 jsonwriter_str(h, "there!");
+jsonwriter_end(h); // or alternatively, for more strict use, `jsonwriter_end_object(h)`
+```
+
+or, in a more concise form:
+```
+jsonwriter_start_object(h);
+jsonwriter_object_str(h, "hello", "there!"); // similar macros can be used for other types
 jsonwriter_end(h);
+
 ```
 
 ##### clean up
