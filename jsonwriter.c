@@ -310,7 +310,7 @@ int jsonwriter_dblf(jsonwriter_handle data, long double d, const char *format_st
     jsonwriter_indent(data, 0);
     if(format_string && !strstr(format_string, "Lf")) // TO DO: return error code
       fprintf(stderr, "Warning: format string passed to jsonwriter_dblf() does not contain Lf: %s\n", format_string);
-    format_string = format_string ? format_string : "%Lf";
+    format_string = format_string ? format_string : "%0.15Lf";
     int len = snprintf(data->tmp, sizeof(data->tmp), format_string, d);
     // TO DO: check if len < 0 or len > sizeof(data->tmp)
     if(len <= 0 || len > sizeof(data->tmp)) { // TO DO: return error code
