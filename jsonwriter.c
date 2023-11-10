@@ -313,9 +313,9 @@ int jsonwriter_dblf(jsonwriter_handle data, long double d, const char *format_st
     format_string = format_string ? format_string : "%0.15Lf";
     int len = snprintf(data->tmp, sizeof(data->tmp), format_string, d);
     // TO DO: check if len < 0 or len > sizeof(data->tmp)
-    if(len <= 0 || len > sizeof(data->tmp)) { // TO DO: return error code
+    if(len <= 0 || (size_t)len > sizeof(data->tmp)) { // TO DO: return error code
       fprintf(stderr, "Warning! jsonwriter_dblf failed to print, outputting zero value\n");
-      jsonwriter_output_buff_write(&data->out, "0", 1);
+      jsonwriter_output_buff_write(&data->out, (const unsigned char *)"0", 1);
     } else {
       if(trim_trailing_zeros_after_dec && memchr(data->tmp, '.', len)) {
         while(len && data->tmp[len-1] == '0')
