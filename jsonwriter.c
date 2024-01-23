@@ -415,6 +415,12 @@ enum jsonwriter_status jsonwriter_variant(jsonwriter_handle d, void *data) {
   case jsonwriter_datatype_bool:
     rc = jsonwriter_bool(d, jv.value.i ? 1 : 0);
     break;
+  case jsonwriter_datatype_raw:
+    if(jv.value.str)
+      rc = jsonwriter_write_raw(d, jv.value.str, strlen(jv.value.str));
+    else
+      rc = jsonwriter_null(d);
+    break;
   }
   if(d->after_to_jsw_variant)
     d->after_to_jsw_variant(data, &jv);

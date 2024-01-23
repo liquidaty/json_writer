@@ -94,7 +94,8 @@ extern "C" {
     jsonwriter_datatype_string = 1,
     jsonwriter_datatype_integer = 2,
     jsonwriter_datatype_float = 3,
-    jsonwriter_datatype_bool = 4
+    jsonwriter_datatype_bool = 4,
+    jsonwriter_datatype_raw = 5, // already stringified, output verbatim
     // possible to do:
     //  array
     //  object
