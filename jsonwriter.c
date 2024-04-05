@@ -417,7 +417,7 @@ enum jsonwriter_status jsonwriter_variant(jsonwriter_handle d, void *data) {
     break;
   case jsonwriter_datatype_raw:
     if(jv.value.str)
-      rc = jsonwriter_write_raw(d, jv.value.str, strlen(jv.value.str));
+      rc = jsonwriter_write_raw(d, jv.value.str, strlen((const char *)jv.value.str));
     else
       rc = jsonwriter_null(d);
     break;
