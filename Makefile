@@ -131,4 +131,4 @@ clean:
 
 ${BUILD_DIR}/objs/jsonwriter.o: jsonwriter.c jsonwriter.h
 	@mkdir -p `dirname "$@"`
-	${CC} ${CFLAGS} -DJSONWRITER_VERSION=\"${VERSION}\" -I${INCLUDE_DIR} ${JSONWRITER_OBJ_OPTS} -o $@ -c $<
+	${CC} ${CFLAGS} -DINCLUDE_UTILS -DJSONWRITER_VERSION=\"${VERSION}\" -I${INCLUDE_DIR} ${JSONWRITER_OBJ_OPTS} -o $@ -c $<
