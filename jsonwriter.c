@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <jsonwriter.h>
+#include <math.h>
 
 #ifdef INCLUDE_UTILS
 #include "utils.c"
@@ -308,26 +309,30 @@ int jsonwriter_dblf(jsonwriter_handle data, long double d, const char *format_st
                     unsigned char trim_trailing_zeros_after_dec) {
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
-    if(format_string && !strstr(format_string, "Lf")) // TO DO: return error code
-      fprintf(stderr, "Warning: format string passed to jsonwriter_dblf() does not contain Lf: %s\n", format_string);
-    format_string = format_string ? format_string : "%0.15Lf";
-    int len = snprintf(data->tmp, sizeof(data->tmp), format_string, d);
-    // TO DO: check if len < 0 or len > sizeof(data->tmp)
-    if(len <= 0 || (size_t)len > sizeof(data->tmp)) { // TO DO: return error code
-      fprintf(stderr, "Warning! jsonwriter_dblf failed to print, outputting zero value\n");
-      jsonwriter_output_buff_write(&data->out, (const unsigned char *)"0", 1);
+    if(isnan(d)) {
+      jsonwriter_output_buff_write(&data->out, (unsigned char *)"\"NaN\"", 5);
     } else {
-      if(trim_trailing_zeros_after_dec && memchr(data->tmp, '.', len)) {
-        while(len && data->tmp[len-1] == '0')
-          len--;
-        if(len && data->tmp[len-1] == '.')
-          len--;
-        if(!len) {
-          *data->tmp = '0';
-          len = 1;
+      if(format_string && !strstr(format_string, "Lf")) // TO DO: return error code
+        fprintf(stderr, "Warning: format string passed to jsonwriter_dblf() does not contain Lf: %s\n", format_string);
+      format_string = format_string ? format_string : "%0.15Lf";
+      int len = snprintf(data->tmp, sizeof(data->tmp), format_string, d);
+      // TO DO: check if len < 0 or len > sizeof(data->tmp)
+      if(len <= 0 || (size_t)len > sizeof(data->tmp)) { // TO DO: return error code
+        fprintf(stderr, "Warning! jsonwriter_dblf failed to print, outputting zero value\n");
+        jsonwriter_output_buff_write(&data->out, (const unsigned char *)"0", 1);
+      } else {
+        if(trim_trailing_zeros_after_dec && memchr(data->tmp, '.', len)) {
+          while(len && data->tmp[len-1] == '0')
+            len--;
+          if(len && data->tmp[len-1] == '.')
+            len--;
+          if(!len) {
+            *data->tmp = '0';
+            len = 1;
+          }
         }
+        jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
       }
-      jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
     }
     return 0;
   }
@@ -342,8 +347,10 @@ int jsonwriter_size_t(jsonwriter_handle data, size_t sz) {
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
     int len = snprintf(data->tmp, sizeof(data->tmp), "%zu", sz);
-    // TO DO: check if len < 0 or len > sizeof(data->tmp)
-    jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
+    if(len < 0 || len >= (int)sizeof(data->tmp))
+      jsonwriter_output_buff_write(&data->out, (unsigned char *)"\"NaN\"", 5);
+    else
+      jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
     return 0;
   }
   return 1;
@@ -353,8 +360,10 @@ int jsonwriter_int(jsonwriter_handle data, jsw_int64 i) {
   if(data->depth < JSONWRITER_MAX_NESTING) {
     jsonwriter_indent(data, 0);
     int len = snprintf(data->tmp, sizeof(data->tmp), JSW_INT64_PRINTF_FMT, i);
-    // TO DO: check if len < 0 or len > sizeof(data->tmp)
-    jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
+    if(len < 0 || len >= (int)sizeof(data->tmp))
+      jsonwriter_output_buff_write(&data->out, (unsigned char *)"\"NaN\"", 5);
+    else
+      jsonwriter_output_buff_write(&data->out, (unsigned char *)data->tmp, len);
     return 0;
   }
   return 1;
