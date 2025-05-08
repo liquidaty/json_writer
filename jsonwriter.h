@@ -17,11 +17,13 @@ extern "C" {
 #  define JSW_INT64_MIN _I64_MIN
 #  define JSW_INT64_MAX _I64_MAX
 #  define JSW_INT64_PRINTF_FMT "%"PRId64
+#  define jsw_uint32 uint32_t
 # else // not WIN
 #  define jsw_int64 int64_t
 #  define JSW_INT64_MIN INT64_MIN
 #  define JSW_INT64_MAX INT64_MAX
 #  define JSW_INT64_PRINTF_FMT "%" PRId64
+#  define jsw_uint32 uint32_t
 # endif
 
   enum jsonwriter_option {
@@ -128,6 +130,13 @@ extern "C" {
   // write raw data to the output stream. Note: caller is responsible for ensuring that
   // the raw data is valid JSON
   size_t jsonwriter_write_raw(jsonwriter_handle jsw, const unsigned char *s, size_t len);
+
+  /*
+   * Write a value of unknown datatype. If it is numeric or bool
+   * conforming to RFC 8259, write it as-is; otherwise treat it
+   * as a string and write the stringified value
+   */
+  int jsonwriter_unknown(jsonwriter_handle h, const unsigned char *s, size_t len, jsw_uint32 flags);
 
 #ifdef __cplusplus
 }

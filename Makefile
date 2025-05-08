@@ -112,7 +112,7 @@ ${LIBJSONWRITER}: ${JSONWRITER_OBJ}
 
 install: ${LIBJSONWRITER_INSTALL}
 	@mkdir -p  $(INCLUDEDIR)
-	@cp -pR *.h $(INCLUDEDIR)
+	@cp -pR jsonwriter.h $(INCLUDEDIR)
 	@echo "include files copied to $(INCLUDEDIR)"
 
 ${LIBJSONWRITER_INSTALL}: ${LIBJSONWRITER}

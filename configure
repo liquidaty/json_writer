@@ -585,7 +585,7 @@ printf "done\n"
 
 echo ""
 echo "****************************************************************"
-echo "*  bzip2_file configuration done                               *"
+echo "*  jsonwriter configuration done                               *"
 echo "****************************************************************"
 
 echo "****************************************************************"
@@ -595,12 +595,8 @@ if ! [ "$MAKE" = "" ]; then
     echo "To build and install, run:"
     echo "  $MAKE install"
     echo ""
-    echo "Other common commands:"
+    echo "To see other common commands:"
     echo "  $MAKE                     # print available make commands"
-    echo "  (cd src && $MAKE install) # install library"
-    echo "  (cd app && $MAKE install) # install library and zsv CLI"
-    echo "  $MAKE uninstall           # uninstall library and zsv CLI"
-    echo "  $MAKE clean               # remove build artifacts"
     echo ""
 fi
 
